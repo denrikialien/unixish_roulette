@@ -89,11 +89,6 @@ fn current_hand_mut(table: &mut Table) -> &mut Hand {
     table.hands.last_mut().unwrap()
 }
 
-fn fold_current_hand(table: &mut Table) -> Hand {
-    assert!(!table.hands.is_empty());
-    table.hands.pop().unwrap()
-}
-
 fn perform_action(table: Table, action: Action) -> State {
     match action {
         Action::Fold => perform_fold(table),
@@ -104,16 +99,16 @@ fn perform_action(table: Table, action: Action) -> State {
 
 fn perform_trigger(mut table: Table) -> State {
     match pull_trigger(&mut table.revolver) {
-        Shot::Fired => State::SomeoneDied(fold_current_hand(&mut table).id),
+        Shot::Fired => State::SomeoneDied(current_hand(&table).id),
         Shot::Blank => match table.revolver.chambers.is_empty() {
-            true => State::SomeoneWon(fold_current_hand(&mut table).id),
+            true => State::SomeoneWon(current_hand(&table).id),
             false => slide_revolver(table, Action::Trigger),
         },
     }
 }
 
 fn perform_fold(mut table: Table) -> State {
-    fold_current_hand(&mut table);
+    table.hands.pop();
     match table.hands.is_empty() {
         true => State::EverybodyFolded,
         false => slide_revolver(table, Action::Fold),
